@@ -1,8 +1,5 @@
 <?php
 
-include_once $path = __DIR__ . DS . ".." . DS . "DelayedEvents.php";
-include_once $path = __DIR__ . DS . ".." . DS . "events" . DS . "TestEvent.php";
-
 use delayed_events\DelayedEvents;
 
 class DelayedEventsTest extends PHPUnit_Framework_TestCase
