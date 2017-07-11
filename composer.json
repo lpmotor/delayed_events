@@ -8,5 +8,11 @@
             "email": "ilin.antonio@gmail.com"
         }
     ],
-    "require": {}
+    "require": {},
+    "autoload": {
+        "psr-0": {
+            "delayed_events":        "src/",
+            "delayed_events\\events": "src/events"
+        }
+    }
 }
