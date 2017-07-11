@@ -104,7 +104,7 @@ abstract class AbstractEvent
     }
 
     public final function getDExecute() {
-        return date('Y-m-d H:i:s', strtotime($this->getDCreated()) + $this->getDelay() - date('Z'));
+        return date('Y-m-d H:i:s', strtotime($this->getDCreated()) + $this->getDelay());
     }
 
     public final function getMicroTimeStart() {
