@@ -13,10 +13,6 @@
         "psr-0": {
             "delayed_events":        "src/",
             "delayed_events\\events": "src/events"
-        },
-        "autoload":
-        {
-            "classmap": [ "src/" ]
         }
     }
 }
