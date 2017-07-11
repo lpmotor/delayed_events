@@ -1,0 +1,12 @@
+{
+    "name": "lpmotor/delayed_events",
+    "description": "Library for running delayed events",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Anton Ilin",
+            "email": "ilin.antonio@gmail.com"
+        }
+    ],
+    "require": {}
+}

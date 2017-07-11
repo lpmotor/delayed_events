@@ -1,0 +1,197 @@
+<?php namespace delayed_events;
+
+use delayed_events\events\AbstractEvent;
+use delayed_events\events\MockEvent;
+
+class DelayedEvents
+{
+    private static $instance;
+    /**
+     * @var \PDO
+     */
+    private $DBH;
+
+    public $dbHost = "127.0.0.1";
+    public $dbName = "test";
+    public $dbUser = "test";
+    public $dbPassword = "*";
+    public $eventsPath;
+
+    public function __construct() {
+        self::$instance = $this;
+    }
+
+    public static function getInstance() {
+        if (is_null(self::$instance)) {
+            self::$instance = new DelayedEvents();
+        }
+
+        return self::$instance;
+    }
+
+    public function getCurDate() {
+        return date('Y-m-d H:i:s', time() - (int) date('Z'));
+    }
+
+    public function getDBH() {
+
+        if (is_null($this->DBH)) {
+            $this->DBH = new \PDO("mysql:host={$this->dbHost};dbname={$this->dbName}", $this->dbUser, $this->dbPassword);
+            $this->DBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        }
+
+        return $this->DBH;
+    }
+
+    /**
+     * получить список событий
+     *
+     * @param int $limit
+     *
+     * @return array
+     */
+    public function getEventListForProcessing($limit = 100) {
+        $sql = "
+            SELECT *
+            FROM events
+            WHERE status_id = 0
+              AND d_execute <= :CURRENT_DATE
+            LIMIT :LIMIT
+        ";
+
+        $STH = $this->getDBH()->prepare($sql);
+        $STH->bindValue(':CURRENT_DATE', $this->getCurDate(), \PDO::PARAM_STR);
+        $STH->bindValue(':LIMIT', $limit, \PDO::PARAM_INT);
+        $STH->setFetchMode(\PDO::FETCH_OBJ);
+        $STH->execute();
+
+        return $STH->fetchAll();
+    }
+
+    /**
+     * обработать список
+     *
+     * @param array $eventList
+     */
+    public function processEventList(&$eventList) {
+        foreach ($eventList as $eventData) {
+            $event = $this->getEventObject($eventData->name, $eventData);
+            $this->processEvent($event);
+        }
+    }
+
+    /**
+     * @param AbstractEvent $event
+     *
+     * @return bool
+     */
+    public function processEvent(&$event) {
+        $result = false;
+
+        try {
+            $event->setMicroTimeStart();
+
+            if (!$event->checkConditions()) {
+                $event->setNewStatus($event::STATUS_IS_SKIPPED);
+            }
+
+            if ($event->execute()) {
+                $event->setNewStatus($event::STATUS_IS_COMPLETED);
+                $result = true;
+            } else {
+                $event->setNewStatus($event::STATUS_NOT_EXECUTED);
+            }
+        } catch (\Exception $e) {
+            $event->setNewStatus($event::STATUS_HAS_ERROR);
+            $event->addLog(['code' => $e->getCode(), 'message' => $e->getMessage(), 'trace' => traceToJson($e->getTrace())]);
+        }
+
+        $event->save();
+
+        return $result;
+    }
+
+    /**
+     * добавление события на обработку
+     *
+     * @param string $name
+     * @param array  $data
+     *
+     * @return bool
+     */
+    public function addEvent($name, $data = []) {
+        $result = false;
+
+        /**
+         * @var AbstractEvent $event
+         */
+        $event = $this->getEventObject($name, $data);
+
+        if ($event !== false) {
+            $result = true;
+            $event->save();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $name
+     *
+     * @return string
+     */
+    public function getClassName($name) {
+        $name = ucfirst($name);
+
+        return "{$name}Event";
+    }
+
+    /**
+     * @param $name
+     *
+     * @return string
+     */
+    public function getClassPath($name) {
+
+        $name = ucfirst($name);
+
+        if (is_null($this->eventsPath)) {
+            $path = __DIR__ . DS . "events" . DS . "{$name}Event.php";
+        } else {
+            $path = $this->eventsPath . "{$name}Event.php";
+        }
+
+        return $path;
+    }
+
+    /**
+     * @param string     $name
+     * @param bool|array $data
+     *
+     * @return bool|AbstractEvent
+     */
+    public function getEventObject($name, $data = false) {
+        $classPath = $this->getClassPath($name);
+        $className = $this->getClassName($name);
+
+        if (file_exists($classPath)) {
+            /**
+             * @var AbstractEvent $event
+             */
+
+            var_dump($classPath);
+
+            include_once "{$classPath}";
+            $event = new $className();
+        } else {
+            include_once "events" . DS . "MockEvent.php";
+            $event = new MockEvent();
+        }
+
+        if (false !== $data) {
+            $event->setFieldsValue($data);
+        }
+
+        return $event;
+    }
+}
