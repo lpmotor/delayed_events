@@ -10,8 +10,8 @@
     ],
     "require": {},
     "autoload": {
-        "psr-0": {
-            "delayed_events":        "src/",
+        "psr-4": {
+            "delayed_events":        "src",
             "delayed_events\\events": "src/events"
         }
     }
