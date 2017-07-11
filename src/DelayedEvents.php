@@ -1,8 +1,5 @@
 <?php namespace delayed_events;
 
-include_once "events" . DS . "AbstractEvent.php";
-include_once "events" . DS . "MockEvent.php";
-
 use delayed_events\events\AbstractEvent;
 use delayed_events\events\MockEvent;
 
@@ -181,8 +178,6 @@ class DelayedEvents
             /**
              * @var AbstractEvent $event
              */
-            include_once "{$classPath}";
-
             $event = new $className();
         } else {
             $event = new MockEvent();
