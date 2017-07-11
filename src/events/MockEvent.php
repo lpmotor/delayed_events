@@ -1,7 +1,5 @@
 <?php namespace delayed_events\events;
 
-include_once "AbstractEvent.php";
-
 class MockEvent extends AbstractEvent
 {
     /**

@@ -178,13 +178,8 @@ class DelayedEvents
             /**
              * @var AbstractEvent $event
              */
-
-            var_dump($classPath);
-
-            include_once "{$classPath}";
             $event = new $className();
         } else {
-            include_once "events" . DS . "MockEvent.php";
             $event = new MockEvent();
         }
 
