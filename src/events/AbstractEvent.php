@@ -145,7 +145,7 @@ abstract class AbstractEvent
     public final function save() {
         if (is_null($this->getId())) {
             $sql = "
-                INSERT INTO events (parent_id, name, d_created, d_status_change, d_execute, duration, status_id, data, log)
+                INSERT INTO delayed_events (parent_id, name, d_created, d_status_change, d_execute, duration, status_id, data, log)
                 VALUES(:PARENT_ID, :NAME, :D_CREATED, :D_STATUS_CHANGE, :D_EXECUTE, :DURATION, :STATUS_ID, :DATA, :LOG)
             ";
 
@@ -164,7 +164,7 @@ abstract class AbstractEvent
             $this->id = DelayedEvents::getInstance()->getDBH()->lastInsertId();
         } else {
             $sql = "
-                UPDATE events
+                UPDATE delayed_events
                 SET parent_id = :PARENT_ID, d_status_change = :D_STATUS_CHANGE, d_execute = :D_EXECUTE, duration = :DURATION, status_id = :STATUS_ID, data = :DATA, log = :LOG
                 WHERE id = :ID
             ";

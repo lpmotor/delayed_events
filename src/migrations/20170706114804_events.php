@@ -5,8 +5,8 @@ use Phinx\Migration\AbstractMigration;
 class Events extends AbstractMigration
 {
     public function up() {
-        if (false === $this->hasTable('events')) {
-            $this->table('events', [
+        if (false === $this->hasTable('delayed_events')) {
+            $this->table('delayed_events', [
                 'id' => false,
                 'primary_key' => ['id'],
                 'comment' => 'События',
@@ -26,8 +26,8 @@ class Events extends AbstractMigration
     }
 
     public function down() {
-        if ($this->hasTable('events')) {
-            $this->table('events')->drop();
+        if ($this->hasTable('delayed_events')) {
+            $this->table('delayed_events')->drop();
         }
     }
 }

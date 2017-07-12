@@ -53,7 +53,7 @@ class DelayedEvents
     public function getEventListForProcessing($limit = 100) {
         $sql = "
             SELECT *
-            FROM events
+            FROM delayed_events
             WHERE status_id = 0
               AND d_execute <= :CURRENT_DATE
             LIMIT :LIMIT
