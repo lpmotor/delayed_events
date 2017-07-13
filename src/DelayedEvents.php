@@ -91,15 +91,15 @@ class DelayedEvents
         try {
             $event->setMicroTimeStart();
 
-            if (!$event->checkConditions()) {
-                $event->setNewStatus($event::STATUS_IS_SKIPPED);
-            }
-
-            if ($event->execute()) {
-                $event->setNewStatus($event::STATUS_IS_COMPLETED);
-                $result = true;
+            if ($event->checkConditions()) {
+                if ($event->execute()) {
+                    $event->setNewStatus($event::STATUS_IS_COMPLETED);
+                    $result = true;
+                } else {
+                    $event->setNewStatus($event::STATUS_NOT_EXECUTED);
+                }
             } else {
-                $event->setNewStatus($event::STATUS_NOT_EXECUTED);
+                $event->setNewStatus($event::STATUS_IS_SKIPPED);
             }
         } catch (\Exception $e) {
             $event->setNewStatus($event::STATUS_HAS_ERROR);
