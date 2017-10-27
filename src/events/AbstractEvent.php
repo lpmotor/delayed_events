@@ -134,7 +134,7 @@ abstract class AbstractEvent
     }
 
     /**
-     * @throws \Exception
+     *
      */
     public function beforeExecute() {
     }
