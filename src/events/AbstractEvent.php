@@ -103,8 +103,12 @@ abstract class AbstractEvent
         $this->log[] = $log;
     }
 
-    public final function getDExecute() {
-        return date('Y-m-d H:i:s', strtotime($this->getDCreated()) + $this->getDelay());
+    public final function getDExecute($ops) {
+        $customDelay = 0;
+        if (isset($ops['delay'])) {
+            $customDelay = (integer) $ops['delay'];
+        }
+        return date('Y-m-d H:i:s', strtotime($this->getDCreated()) + $this->getDelay() + $customDelay);
     }
 
     public final function getMicroTimeStart() {
@@ -135,6 +139,14 @@ abstract class AbstractEvent
 
     /**
      * @return bool
+     * @throws \Exception
+     */
+    public function beforeExecute() {
+        return true;
+    }
+
+    /**
+     * @return bool
      */
     abstract public function execute();
 
@@ -142,7 +154,7 @@ abstract class AbstractEvent
      * @return bool
      * @throws \Exception
      */
-    public final function save() {
+    public final function save($ops = []) {
         if (is_null($this->getId())) {
             $sql = "
                 INSERT INTO delayed_events (parent_id, name, d_created, d_status_change, d_execute, duration, status_id, data, log)
@@ -154,7 +166,7 @@ abstract class AbstractEvent
             $STH->bindValue(':NAME', $this->getName(), \PDO::PARAM_STR);
             $STH->bindValue(':D_CREATED', $this->getDCreated());
             $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
-            $STH->bindValue(':D_EXECUTE', $this->getDExecute());
+            $STH->bindValue(':D_EXECUTE', $this->getDExecute($ops));
             $STH->bindValue(':DURATION', $this->getDuration());
             $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
             $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
@@ -172,7 +184,7 @@ abstract class AbstractEvent
             $STH = DelayedEvents::getInstance()->getDBH()->prepare($sql);
             $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
             $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
-            $STH->bindValue(':D_EXECUTE', $this->getDExecute());
+            $STH->bindValue(':D_EXECUTE', $this->getDExecute($ops));
             $STH->bindValue(':DURATION', $this->getDuration());
             $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
             $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
