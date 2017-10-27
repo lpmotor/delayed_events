@@ -92,7 +92,7 @@ class DelayedEvents
             $event->setMicroTimeStart();
 
             if ($event->checkConditions()) {
-                if ($event->execute()) {
+                if ($event->beforeExecute() && $event->execute()) {
                     $event->setNewStatus($event::STATUS_IS_COMPLETED);
                     $result = true;
                 } else {
@@ -129,7 +129,7 @@ class DelayedEvents
 
         if ($event !== false) {
             $result = true;
-            $event->save();
+            $event->save($data);
         }
 
         return $result;
