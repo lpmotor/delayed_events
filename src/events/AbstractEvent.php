@@ -134,6 +134,12 @@ abstract class AbstractEvent
     }
 
     /**
+     *
+     */
+    public function beforeExecute() {
+    }
+
+    /**
      * @return bool
      */
     abstract public function execute();
