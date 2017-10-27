@@ -135,6 +135,14 @@ abstract class AbstractEvent
 
     /**
      * @return bool
+     * @throws \Exception
+     */
+    public function beforeExecute() {
+        return true;
+    }
+
+    /**
+     * @return bool
      */
     abstract public function execute();
 
