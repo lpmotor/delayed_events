@@ -92,7 +92,8 @@ class DelayedEvents
             $event->setMicroTimeStart();
 
             if ($event->checkConditions()) {
-                if ($event->beforeExecute() && $event->execute()) {
+                $event->beforeExecute();
+                if ($event->execute()) {
                     $event->setNewStatus($event::STATUS_IS_COMPLETED);
                     $result = true;
                 } else {
