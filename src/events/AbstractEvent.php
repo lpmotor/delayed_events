@@ -134,11 +134,9 @@ abstract class AbstractEvent
     }
 
     /**
-     * @return bool
      * @throws \Exception
      */
     public function beforeExecute() {
-        return true;
     }
 
     /**
