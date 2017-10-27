@@ -129,7 +129,7 @@ class DelayedEvents
 
         if ($event !== false) {
             $result = true;
-            $event->save();
+            $event->save($data);
         }
 
         return $result;
