@@ -176,7 +176,7 @@ abstract class AbstractEvent
             $STH = DelayedEvents::getInstance()->getDBH()->prepare($sql);
             $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
             $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
-            $STH->bindValue(':D_EXECUTE', $this->getDExecute());
+            $STH->bindValue(':D_EXECUTE', $this->getDExecute($ops));
             $STH->bindValue(':DURATION', $this->getDuration());
             $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
             $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
