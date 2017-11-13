@@ -129,8 +129,8 @@ class DelayedEvents
         $event = $this->getEventObject($name, $data);
 
         if ($event !== false) {
-            $result = true;
             $event->save();
+            $result = $event;
         }
 
         return $result;
