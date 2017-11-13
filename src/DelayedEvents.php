@@ -118,7 +118,7 @@ class DelayedEvents
      * @param string $name
      * @param array  $data
      *
-     * @return bool
+     * @return bool|AbstractEvent
      */
     public function addEvent($name, $data = []) {
         $result = false;
@@ -129,8 +129,8 @@ class DelayedEvents
         $event = $this->getEventObject($name, $data);
 
         if ($event !== false) {
-            $result = true;
             $event->save();
+            $result = $event;
         }
 
         return $result;
