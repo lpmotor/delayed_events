@@ -21,6 +21,7 @@ abstract class AbstractEvent
     protected $d_status_change;
     protected $micro_time_start;
     protected $log = [];
+    protected $commit = true;
 
     /**
      * AbstractEvent constructor.
@@ -149,44 +150,57 @@ abstract class AbstractEvent
      * @throws \Exception
      */
     public final function save() {
-        if (is_null($this->getId())) {
-            $sql = "
+        $dbh = DelayedEvents::getInstance()->getDBH();
+        $dbh->beginTransaction();
+
+        try {
+            if (is_null($this->getId())) {
+                $sql = "
                 INSERT INTO delayed_events (parent_id, name, d_created, d_status_change, d_execute, duration, status_id, data, log)
                 VALUES(:PARENT_ID, :NAME, :D_CREATED, :D_STATUS_CHANGE, :D_EXECUTE, :DURATION, :STATUS_ID, :DATA, :LOG)
             ";
 
-            $STH = DelayedEvents::getInstance()->getDBH()->prepare($sql);
-            $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
-            $STH->bindValue(':NAME', $this->getName(), \PDO::PARAM_STR);
-            $STH->bindValue(':D_CREATED', $this->getDCreated());
-            $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
-            $STH->bindValue(':D_EXECUTE', $this->getDExecute());
-            $STH->bindValue(':DURATION', $this->getDuration());
-            $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
-            $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
-            $STH->bindValue(':LOG', json_encode($this->getLog()), \PDO::PARAM_STR);
-            $result = $STH->execute();
+                $STH = $dbh->prepare($sql);
+                $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
+                $STH->bindValue(':NAME', $this->getName(), \PDO::PARAM_STR);
+                $STH->bindValue(':D_CREATED', $this->getDCreated());
+                $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
+                $STH->bindValue(':D_EXECUTE', $this->getDExecute());
+                $STH->bindValue(':DURATION', $this->getDuration());
+                $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
+                $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
+                $STH->bindValue(':LOG', json_encode($this->getLog()), \PDO::PARAM_STR);
+                $result = $STH->execute();
 
-            $this->id = DelayedEvents::getInstance()->getDBH()->lastInsertId();
-        } else {
-            $sql = "
+                $this->id = $dbh->lastInsertId();
+            } else {
+                $sql = "
                 UPDATE delayed_events
                 SET parent_id = :PARENT_ID, d_status_change = :D_STATUS_CHANGE, d_execute = :D_EXECUTE, duration = :DURATION, status_id = :STATUS_ID, data = :DATA, log = :LOG
                 WHERE id = :ID
             ";
+                $STH = $dbh->prepare($sql);
+                $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
+                $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
+                $STH->bindValue(':D_EXECUTE', $this->getDExecute());
+                $STH->bindValue(':DURATION', $this->getDuration());
+                $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
+                $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
+                $STH->bindValue(':LOG', json_encode($this->getLog()), \PDO::PARAM_STR);
+                $STH->bindValue(':ID', $this->getId());
+                $result = $STH->execute();
+            }
 
-            $STH = DelayedEvents::getInstance()->getDBH()->prepare($sql);
-            $STH->bindValue(':PARENT_ID', $this->getParentId(), \PDO::PARAM_INT);
-            $STH->bindValue(':D_STATUS_CHANGE', $this->getDStatusChange());
-            $STH->bindValue(':D_EXECUTE', $this->getDExecute());
-            $STH->bindValue(':DURATION', $this->getDuration());
-            $STH->bindValue(':STATUS_ID', $this->getStatusId(), \PDO::PARAM_INT);
-            $STH->bindValue(':DATA', json_encode($this->getData()), \PDO::PARAM_STR);
-            $STH->bindValue(':LOG', json_encode($this->getLog()), \PDO::PARAM_STR);
-            $STH->bindValue(':ID', $this->getId());
-            $result = $STH->execute();
+            if ($this->commit) {
+                $dbh->commit();
+            } else {
+                $dbh->rollBack();
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            $dbh->rollBack();
+            throw $e;
         }
-
-        return $result;
     }
 }
