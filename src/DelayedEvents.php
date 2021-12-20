@@ -6,10 +6,6 @@ use delayed_events\events\MockEvent;
 class DelayedEvents
 {
     private static $instance;
-    /**
-     * @var \PDO
-     */
-    private $DBH;
 
     public $dbHost = "127.0.0.1";
     public $dbName = "test";
@@ -34,13 +30,10 @@ class DelayedEvents
     }
 
     public function getDBH() {
+        $DBH = new \PDO("mysql:host={$this->dbHost};dbname={$this->dbName}", $this->dbUser, $this->dbPassword);
+        $DBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-        if (is_null($this->DBH)) {
-            $this->DBH = new \PDO("mysql:host={$this->dbHost};dbname={$this->dbName}", $this->dbUser, $this->dbPassword);
-            $this->DBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        }
-
-        return $this->DBH;
+        return $DBH;
     }
 
     /**
