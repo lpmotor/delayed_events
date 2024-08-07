@@ -1,6 +1,7 @@
 <?php namespace delayed_events\events;
 
 use delayed_events\DelayedEvents;
+use Exception;
 
 abstract class AbstractEvent
 {
@@ -40,13 +41,19 @@ abstract class AbstractEvent
     public final function setFieldsValue($data) {
         foreach ($data as $fieldName => $fieldValue) {
             if (property_exists($this, $fieldName)) {
-                if (in_array($fieldName, ['name'])) {
+                if ('name' === $fieldName) {
                     continue;
                 }
 
                 if (in_array($fieldName, ['data', 'log'])) {
+                    if (null === $fieldValue) {
+                        $fieldValue = [];
+                    }
                     if (!is_array($fieldValue) && !is_object($fieldValue)) {
                         $fieldValue = json_decode($fieldValue, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            throw new Exception("Field '$fieldName' is not a valid JSON object");
+                        }
                         $fieldValue = is_array($fieldValue) ? $fieldValue : [];
                     }
                 }
@@ -128,7 +135,7 @@ abstract class AbstractEvent
 
     /**
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function checkConditions() {
         return true;
@@ -147,7 +154,7 @@ abstract class AbstractEvent
 
     /**
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public final function save() {
         $dbh = DelayedEvents::getInstance()->getDBH();
@@ -198,7 +205,7 @@ abstract class AbstractEvent
             }
 
             return $result;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $dbh->rollBack();
             throw $e;
         }
