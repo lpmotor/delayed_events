@@ -2,6 +2,7 @@
 
 use delayed_events\events\AbstractEvent;
 use delayed_events\events\MockEvent;
+use Throwable;
 
 class DelayedEvents
 {
@@ -13,11 +14,13 @@ class DelayedEvents
     public $dbPassword = "*";
     public $eventsPath;
 
-    public function __construct() {
+    public function __construct()
+    {
         self::$instance = $this;
     }
 
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (is_null(self::$instance)) {
             self::$instance = new DelayedEvents();
         }
@@ -25,11 +28,13 @@ class DelayedEvents
         return self::$instance;
     }
 
-    public function getCurDate() {
-        return date('Y-m-d H:i:s', time() - (int) date('Z'));
+    public function getCurDate()
+    {
+        return date('Y-m-d H:i:s', time() - (int)date('Z'));
     }
 
-    public function getDBH() {
+    public function getDBH()
+    {
         $DBH = new \PDO("mysql:host={$this->dbHost};dbname={$this->dbName}", $this->dbUser, $this->dbPassword);
         $DBH->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
@@ -43,7 +48,8 @@ class DelayedEvents
      *
      * @return array
      */
-    public function getEventListForProcessing($limit = 100) {
+    public function getEventListForProcessing($limit = 100)
+    {
         $sql = "
             SELECT *
             FROM delayed_events
@@ -66,7 +72,8 @@ class DelayedEvents
      *
      * @param array $eventList
      */
-    public function processEventList(&$eventList) {
+    public function processEventList(&$eventList)
+    {
         foreach ($eventList as $eventData) {
             $event = $this->getEventObject($eventData->name, $eventData);
             $this->processEvent($event);
@@ -78,7 +85,8 @@ class DelayedEvents
      *
      * @return bool
      */
-    public function processEvent(&$event) {
+    public function processEvent(&$event)
+    {
         $result = false;
 
         try {
@@ -95,7 +103,7 @@ class DelayedEvents
             } else {
                 $event->setNewStatus($event::STATUS_IS_SKIPPED);
             }
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $event->setNewStatus($event::STATUS_HAS_ERROR);
             $event->addLog(['code' => $e->getCode(), 'message' => $e->getMessage(), 'trace' => traceToJson($e->getTrace())]);
         }
@@ -109,11 +117,12 @@ class DelayedEvents
      * добавление события на обработку
      *
      * @param string $name
-     * @param array  $data
+     * @param array $data
      *
      * @return bool|AbstractEvent
      */
-    public function addEvent($name, $data = []) {
+    public function addEvent($name, $data = [])
+    {
         $result = false;
 
         /**
@@ -134,7 +143,8 @@ class DelayedEvents
      *
      * @return string
      */
-    public function getClassName($name) {
+    public function getClassName($name)
+    {
         $name = ucfirst($name);
 
         return "events\\{$name}Event";
@@ -145,7 +155,8 @@ class DelayedEvents
      *
      * @return string
      */
-    public function getClassPath($name) {
+    public function getClassPath($name)
+    {
 
         $name = ucfirst($name);
 
@@ -159,12 +170,13 @@ class DelayedEvents
     }
 
     /**
-     * @param string     $name
+     * @param string $name
      * @param bool|array $data
      *
      * @return bool|AbstractEvent
      */
-    public function getEventObject($name, $data = false) {
+    public function getEventObject($name, $data = false)
+    {
         $classPath = $this->getClassPath($name);
         $className = $this->getClassName($name);
 
